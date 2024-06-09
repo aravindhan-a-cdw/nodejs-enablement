@@ -27,14 +27,14 @@ const options = {
   };
 app.use('/api-docs', swaggerUi.serveFiles(null, options), swaggerUi.setup(null, options));
 
+// Add routes
+app.use('/api/v1', authRoutes);
+
 // Error Handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send("Something broke!");
   logger.error(err.message);
+  res.status(500).send("Something broke!");
 });
-
-// Add routes
-app.use('/api/v1', authRoutes);
 
 module.exports = app;

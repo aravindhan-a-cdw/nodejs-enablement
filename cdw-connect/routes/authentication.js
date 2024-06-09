@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const UserModel = require('../models/user');
+const { default: mongoose } = require('mongoose');
 
 router.get('/login', (req, res) => {
     // #swagger.tags = ['Auth']
@@ -7,20 +9,33 @@ router.get('/login', (req, res) => {
     res.send("You have found me!");
 });
 
-router.post('/signup', (req, res) => {
+router.post('/signup', (req, res, next) => {
     // #swagger.tags = ['Auth']
-    res.send("You have found me!");
+    const user = new UserModel({
+        name: "Aravindhan",
+        employeeId: "20411",
+        "email": "abcd@cdw.com",
+        gender: "male",
+        // password: "1232434"
+    });
+    user.save().then(userDoc => {
+        res.json(userDoc);
+    }).catch(err => {
+        if(err instanceof mongoose.Error.ValidationError) {
+            res.status(422).json({
+                message: err.message
+            })
+        } else {
+            next(err);
+        }
+    });
 });
 
-router.post('/change-password', () => {
-    res.send("Do you really forgot the password?");
-});
-
-router.get('/approval', () => {
+router.get('/pending', () => {
     res.send('List of users need approval');
 })
 
-router.post('/approval', () => {
+router.post('/pending', () => {
     res.send("Approved the user");
 })
 
