@@ -1,0 +1,56 @@
+[
+    {
+        "email": "aravindhan.asaithambi@cdw.com",
+        "employeeId": "2041",
+        "name": "Aravindhan Asaithambi",
+        "role": "user"
+    },
+    {
+        "email": "user1@cdw.com",
+        "employeeId": "0001",
+        "name": "User 1",
+        "role": "user"
+    },
+    {
+        "email": "user2@cdw.com",
+        "employeeId": "0002",
+        "name": "User 2",
+        "role": "user"
+    },
+    {
+        "email": "user3@cdw.com",
+        "employeeId": "0003",
+        "name": "User 3",
+        "role": "user"
+    },
+    {
+        "email": "user4@cdw.com",
+        "employeeId": "0004",
+        "name": "User 4",
+        "role": "user"
+    },
+    {
+        "email": "user5@cdw.com",
+        "employeeId": "0005",
+        "name": "User 5",
+        "role": "user"
+    },
+    {
+        "email": "muralidhar.dhandapani@cdw.com",
+        "employeeId": "1114",
+        "name": "Muralidhar Dhandapani",
+        "role": "admin"
+    },
+    {
+        "email": "admin1@cdw.com",
+        "employeeId": "0011",
+        "name": "Admin 1",
+        "role": "admin"
+    },
+    {
+        "email": "admin2@cdw.com",
+        "employeeId": "0012",
+        "name": "Admin 2",
+        "role": "admin"
+    }
+]
