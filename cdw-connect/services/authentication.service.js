@@ -1,6 +1,7 @@
 const UserModel = require("../models/user");
 const {AUTHENTICATION_ERRORS} = require('../constants/error');
 const { getWalletData } = require("../utils/walletData");
+const { USER } = require("../constants/schema");
 
 const pendingApprovals = async () => {
   const pendingUsers = await UserModel.find(
@@ -28,4 +29,20 @@ const signUp = async (userData) => {
   return userInstance;
 };
 
-module.exports = { signUp, pendingApprovals };
+const approveUser = async (employeeId) => {
+  const user = await UserModel.findOneAndUpdate(
+    {
+      employeeId,
+      status: USER.STATUS[0],
+    },
+    {
+      status: USER.STATUS[1]
+    }
+  ).exec();
+  if(user === null) {
+    return false;
+  }
+  return true;
+}
+
+module.exports = { signUp, pendingApprovals, approveUser };

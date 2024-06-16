@@ -3,12 +3,13 @@ const mongoose = require("mongoose");
 const authenticationService = require("../services/authentication.service");
 const { AUTHENTICATION_ERRORS } = require("../constants/error");
 const { USER } = require("../constants/schema");
+const { logger } = require("../config/logger");
 
 const authenticationController = {
   signUp: async (data) => {
     try {
       const userInstance = await authenticationService.signUp(data);
-      if(userInstance.role === USER.ROLES[0]) {
+      if (userInstance.role === USER.ROLES[0]) {
         return {
           message:
             "User registration successful! Kindly wait for admin to approve.",
@@ -18,13 +19,12 @@ const authenticationController = {
         userInstance.status = "active";
         await userInstance.save();
         return {
-          message:
-            `Welcome ${userInstance.name}! Your registration is successful!`,
+          message: `Welcome ${userInstance.name}! Your registration is successful!`,
           status: 200,
         };
       }
     } catch (err) {
-      if ((err.message === AUTHENTICATION_ERRORS.USER_NOT_EXIST_IN_WALLET_DB)) {
+      if (err.message === AUTHENTICATION_ERRORS.USER_NOT_EXIST_IN_WALLET_DB) {
         return {
           message: `User with given data doesn't exist in wallet db`,
           status: 400,
@@ -51,28 +51,28 @@ const authenticationController = {
   },
   login: async (user) => {
     try {
-        if (user.status === "pending") {
-          return {
-            message: "You are not yet approved by admin!",
-            status: 401,
-          };
-        } else if (user.status === "rejected") {
-          return {
-            message:
-              "You are signup is rejected by admin! Try signing up again after 2 days",
-            status: 401,
-          };
-        }
-        const token = jwt.sign(
-          { id: user.employeeId, role: user.role },
-          process.env.JWT_SECRET,
-          { expiresIn: "30m" }
-        );
+      if (user.status === "pending") {
         return {
-          message: "Login successfull!",
-          token: token,
-          status: 200,
+          message: "You are not yet approved by admin!",
+          status: 401,
         };
+      } else if (user.status === "rejected") {
+        return {
+          message:
+            "You are signup is rejected by admin! Try signing up again after 2 days",
+          status: 401,
+        };
+      }
+      const token = jwt.sign(
+        { id: user.employeeId, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "30m" }
+      );
+      return {
+        message: "Login successfull!",
+        token: token,
+        status: 200,
+      };
     } catch (err) {
       return {
         message: "Something unexpected has happened! Try after some time!",
@@ -81,12 +81,22 @@ const authenticationController = {
     }
   },
   getPendingApprovals: async () => {
-    const pendingApprovalRequests = authenticationService.pendingApprovals();
+    const pendingApprovalRequests =
+      await authenticationService.pendingApprovals();
     return {
       requests: pendingApprovalRequests,
-      status: 200
+      status: 200,
+    };
+  },
+  approveUser: async (employeeId) => {
+    try {
+      const response = await authenticationService.approveUser(employeeId);
+      return response;
+    } catch (err) {
+      logger.error(err.message);
+      return null;
     }
-  }
+  },
 };
 
 module.exports = authenticationController;
