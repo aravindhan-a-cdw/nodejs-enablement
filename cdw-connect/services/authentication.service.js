@@ -9,17 +9,14 @@ const pendingApprovals = async () => {
     },
     "name email employeeId createdAt"
   ).exec();
-  return {
-    users: pendingUsers,
-    status: 200,
-  };
+  return pendingUsers;
 };
 
 const signUp = async (userData) => {
   const walletData = await getWalletData();
   const walletUser = walletData.find(
     (user) =>
-      user.email === userData.email && user.employeeId === userData.employeeId
+      user.email === userData.email && user.employeeId === userData.employeeId && user.role == userData.role
   );
   if (walletUser === undefined) {
     throw new Error(AUTHENTICATION_ERRORS.USER_NOT_EXIST_IN_WALLET_DB);

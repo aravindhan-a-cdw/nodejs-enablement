@@ -53,7 +53,7 @@ router.get(
             "bearerAuth": []
     }] */
     try {
-      const pendingResponse = await pendingApprovals();
+      const pendingResponse = await authenticationController.getPendingApprovals();
       res.status(pendingResponse.status).json(pendingResponse);
     } catch (err) {
       next(err);

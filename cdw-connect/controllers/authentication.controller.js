@@ -2,16 +2,27 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const authenticationService = require("../services/authentication.service");
 const { AUTHENTICATION_ERRORS } = require("../constants/error");
+const { USER } = require("../constants/schema");
 
 const authenticationController = {
   signUp: async (data) => {
     try {
-      const response = await authenticationService.signUp(data);
-      return {
-        message:
-          "User registration successful! Kindly wait for admin to approve.",
-        status: 200,
-      };
+      const userInstance = await authenticationService.signUp(data);
+      if(userInstance.role === USER.ROLES[0]) {
+        return {
+          message:
+            "User registration successful! Kindly wait for admin to approve.",
+          status: 200,
+        };
+      } else {
+        userInstance.status = "active";
+        await userInstance.save();
+        return {
+          message:
+            `Welcome ${userInstance.name}! Your registration is successful!`,
+          status: 200,
+        };
+      }
     } catch (err) {
       if ((err.message === AUTHENTICATION_ERRORS.USER_NOT_EXIST_IN_WALLET_DB)) {
         return {
@@ -69,6 +80,13 @@ const authenticationController = {
       };
     }
   },
+  getPendingApprovals: async () => {
+    const pendingApprovalRequests = authenticationService.pendingApprovals();
+    return {
+      requests: pendingApprovalRequests,
+      status: 200
+    }
+  }
 };
 
 module.exports = authenticationController;
