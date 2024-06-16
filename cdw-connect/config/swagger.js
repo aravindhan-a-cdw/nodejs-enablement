@@ -14,6 +14,7 @@ const doc = {
       email: "kokki.kumar@cdw.com",
       gender: "male",
       password: "SuperSecret",
+      role: "user",
     },
     LoginUser: {
       email: "kokki.kumar@cdw.com",
