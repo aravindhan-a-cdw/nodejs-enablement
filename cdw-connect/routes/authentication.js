@@ -52,7 +52,7 @@ router.get(
   checkAuthentication(),
   checkRole(["admin"]),
   async (req, res, next) => {
-    // #swagger.tags = ['AuthApproval']
+    // #swagger.tags = ['Admin']
     /* #swagger.security = [{
             "bearerAuth": []
     }] */
@@ -71,7 +71,7 @@ router.post(
   checkAuthentication(),
   checkRole(["admin"]),
   async (req, res) => {
-    // #swagger.tags = ['AuthApproval']
+    // #swagger.tags = ['Admin']
     /* #swagger.security = [{
             "bearerAuth": []
     }] */
@@ -90,6 +90,36 @@ router.post(
     }
     res.json({
       message: `User request approved!`,
+      status: 200,
+    });
+  }
+);
+
+
+router.post(
+  "/reject/:employeeId",
+  checkAuthentication(),
+  checkRole(["admin"]),
+  async (req, res) => {
+    // #swagger.tags = ['Admin']
+    /* #swagger.security = [{
+            "bearerAuth": []
+    }] */
+    const employeeId = req.params.employeeId;
+    const approved = await authenticationController.rejectUser(employeeId);
+    if (approved === null) {
+      return res.status(500).json({
+        message: `Some unexpected error occurred!`,
+        status: 500,
+      });
+    } else if (approved === false) {
+      return res.status(404).json({
+        message: `User with employeeId ${employeeId} not found in pending list!`,
+        status: 404,
+      });
+    }
+    res.json({
+      message: `User request rejected!`,
       status: 200,
     });
   }

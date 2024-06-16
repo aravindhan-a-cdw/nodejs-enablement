@@ -23,10 +23,22 @@ const signUp = async (userData) => {
     throw new Error(AUTHENTICATION_ERRORS.USER_NOT_EXIST_IN_WALLET_DB);
   }
 
+  const pendingUser = await UserModel.findOne(
+    {
+      $or: [{status: "pending"}, {status: "rejected"}],
+      email: userData.email
+    },
+    "name email role status employeeId createdAt updatedAt"
+  ).exec();
+
+  if(pendingUser) {
+    return {created: false, user: pendingUser};
+  }
+
   const user = new UserModel(userData);
   const userInstance = await user.save();
 
-  return userInstance;
+  return {created: true, user: userInstance};
 };
 
 const approveUser = async (employeeId) => {
@@ -45,4 +57,20 @@ const approveUser = async (employeeId) => {
   return true;
 }
 
-module.exports = { signUp, pendingApprovals, approveUser };
+const rejectUser = async (employeeId) => {
+  const user = await UserModel.findOneAndUpdate(
+    {
+      employeeId,
+      status: USER.STATUS[0],
+    },
+    {
+      status: USER.STATUS[2]
+    }
+  ).exec();
+  if(user === null) {
+    return false;
+  }
+  return true;
+}
+
+module.exports = { signUp, pendingApprovals, approveUser, rejectUser };

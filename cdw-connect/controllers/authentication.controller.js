@@ -8,18 +8,32 @@ const { logger } = require("../config/logger");
 const authenticationController = {
   signUp: async (data) => {
     try {
-      const userInstance = await authenticationService.signUp(data);
-      if (userInstance.role === USER.ROLES[0]) {
-        return {
-          message:
-            "User registration successful! Kindly wait for admin to approve.",
-          status: 200,
-        };
+      const {created, user} = await authenticationService.signUp(data);
+      if (user.role === USER.ROLES[0]) {
+        if(created) {
+          return {
+            message:
+              "User registration successful! Kindly wait for admin to approve.",
+            status: 200,
+          };
+        } else {
+          if(user.status === USER.STATUS[0]) {
+            return {
+              message: "Your request is pending! Wait for the admin to approve!",
+              status: 409
+            }
+          } else {
+            return {
+              message: "Your request is rejected! You need to wait for 2 days before reapplying!",
+              status: 409
+            }
+          }
+        }
       } else {
-        userInstance.status = "active";
-        await userInstance.save();
+        user.status = "active";
+        await user.save();
         return {
-          message: `Welcome ${userInstance.name}! Your registration is successful!`,
+          message: `Welcome ${user.name}! Your registration is successful!`,
           status: 200,
         };
       }
@@ -42,6 +56,7 @@ const authenticationController = {
           };
         }
       } else {
+        logger.error(err.message);
         return {
           message: "Something unexpected has happened! Try after some time!",
           status: 500,
@@ -91,6 +106,15 @@ const authenticationController = {
   approveUser: async (employeeId) => {
     try {
       const response = await authenticationService.approveUser(employeeId);
+      return response;
+    } catch (err) {
+      logger.error(err.message);
+      return null;
+    }
+  },
+  rejectUser: async (employeeId) => {
+    try {
+      const response = await authenticationService.rejectUser(employeeId);
       return response;
     } catch (err) {
       logger.error(err.message);
