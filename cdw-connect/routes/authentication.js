@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const passport = require("passport");
 const authenticationController = require("../controllers/authentication.controller");
+const {checkRole} = require('../middlewares/authentication.middleware');
 
 
 router.post("/login", function (req, res, next) {
@@ -46,6 +47,7 @@ router.post("/signup", (req, res, next) => {
 router.get(
   "/pending",
   passport.authenticate("jwt", { session: false }),
+  checkRole(['admin']),
   async (req, res, next) => {
     /* #swagger.security = [{
             "bearerAuth": []
