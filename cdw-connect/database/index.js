@@ -8,4 +8,8 @@ async function connect() {
   await mongoose.connect(process.env.MONGO_DB_URL);
 }
 
+mongoose.connection.on('error', (err) => {
+  console.log(`Failed to connect to MongoDB: ${err.message}`);
+});
+
 module.exports = {connect}
