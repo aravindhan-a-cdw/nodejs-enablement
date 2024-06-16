@@ -1,11 +1,13 @@
 const express = require("express");
 const swaggerUi = require('swagger-ui-express');
+const passport = require('passport');
 require('dotenv').config();
-const {logger, loggerMiddleware} = require('./utils/logger');
+const {logger, loggerMiddleware} = require('./config/logger');
 const authRoutes = require('./routes/authentication');
+const { jwtStrategy, localStrategy } = require("./config/passport");
 
 if(process.env.ENVIRONMENT === 'dev') {
-    require('./utils/swagger');
+    require('./config/swagger');
 }
 
 const app = express();
@@ -17,6 +19,10 @@ app.use(express.static('public'))
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(loggerMiddleware);
+app.use(passport.initialize());
+
+passport.use(jwtStrategy);
+passport.use(localStrategy);
 
 // Add Swagger UI Middleware
 const options = {
