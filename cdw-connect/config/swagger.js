@@ -30,6 +30,15 @@ const doc = {
       experience: "10",
       businessUnit: "Security",
       workLocation: "Chennai",
+    },
+    CreatePost: {
+      "title": "Post Title",
+      "location": "Chennai",
+      "link": "https://img.ur/post-image.jpg",
+      "caption": "This is the caption of the post",
+    },
+    CreateComment: {
+      text: "This post is very great"
     }
   },
   securityDefinitions: {
