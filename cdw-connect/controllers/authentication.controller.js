@@ -22,10 +22,22 @@ const authenticationController = {
               message: "Your request is pending! Wait for the admin to approve!",
               status: 409
             }
-          } else {
-            return {
-              message: "Your request is rejected! You need to wait for 2 days before reapplying!",
-              status: 409
+          } else if (user.status === USER.STATUS[2]) {
+            const twoDaysBefore = new Date();
+            twoDaysBefore.setDate(twoDaysBefore.getDate() - 1);
+            if(user.updatedAt > twoDaysBefore) {
+              return {
+                message: "Your request is rejected! You need to wait for 2 days before reapplying!",
+                status: 409
+              }
+            } else {
+              user.status = USER.STATUS[0];
+              await user.save();
+              return {
+                message:
+                  "User registration successful! Kindly wait for admin to approve.",
+                status: 200,
+              };
             }
           }
         }
@@ -115,6 +127,15 @@ const authenticationController = {
   rejectUser: async (employeeId) => {
     try {
       const response = await authenticationService.rejectUser(employeeId);
+      return response;
+    } catch (err) {
+      logger.error(err.message);
+      return null;
+    }
+  },
+  removeUser: async (employeeId) => {
+    try {
+      const response = await authenticationService.removeUser(employeeId);
       return response;
     } catch (err) {
       logger.error(err.message);

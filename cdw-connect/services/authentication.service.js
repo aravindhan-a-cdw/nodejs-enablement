@@ -73,4 +73,20 @@ const rejectUser = async (employeeId) => {
   return true;
 }
 
-module.exports = { signUp, pendingApprovals, approveUser, rejectUser };
+const removeUser = async (employeeId) => {
+  const user = await UserModel.findOneAndUpdate(
+    {
+      employeeId,
+      status: USER.STATUS[1],
+    },
+    {
+      status: USER.STATUS[3]
+    }
+  ).exec();
+  if(user === null) {
+    return false;
+  }
+  return true;
+}
+
+module.exports = { signUp, pendingApprovals, approveUser, rejectUser, removeUser };

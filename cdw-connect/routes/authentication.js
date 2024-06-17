@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 const passport = require("passport");
 const authenticationController = require("../controllers/authentication.controller");
-const { checkRole, checkAuthentication } = require("../middlewares/authentication.middleware");
+const {
+  checkRole,
+  checkAuthentication,
+} = require("../middlewares/authentication.middleware");
 
 router.post("/login", function (req, res, next) {
   // #swagger.tags = ['Auth']
@@ -29,12 +32,14 @@ router.post("/login", function (req, res, next) {
 });
 
 router.post("/signup", (req, res, next) => {
-  // #swagger.tags = ['Auth']
-  /*  #swagger.parameters['body'] = {
-            in: 'body',
-            description: 'Add new user.',
-            schema: { $ref: '#/definitions/AddUser' }
-    } */
+  /*  
+    #swagger.tags = ['Auth']
+    #swagger.parameters['body'] = {
+      in: 'body',
+      description: 'Add new user.',
+      schema: { $ref: '#/definitions/AddUser' }
+    } 
+  */
   const userData = req.body;
   const signUpResponse = authenticationController.signUp(userData);
 
@@ -71,33 +76,50 @@ router.post(
   checkAuthentication(),
   checkRole(["admin"]),
   async (req, res) => {
-    // #swagger.tags = ['Admin']
-    /* #swagger.security = [{
-            "bearerAuth": []
-    }] */
+    /* 
+      #swagger.tags = ['Admin']
+      #swagger.security = [{
+        "bearerAuth": []
+      }]
+      #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Approve or reject user',
+        schema: { approve: true }
+      }
+    */
     const employeeId = req.params.employeeId;
-    const approved = await authenticationController.approveUser(employeeId);
-    if (approved === null) {
+    const approveUser = req.body.approve;
+    if(approveUser === undefined) {
+      return res.status(429).json({
+        message: "Not able to process the data. Key approve not found!"
+      });
+    }
+    let success = null;
+    if(approveUser) {
+      success = await authenticationController.approveUser(employeeId);
+    } else {
+      success = await authenticationController.rejectUser(employeeId);
+    }
+    if (success === null) {
       return res.status(500).json({
         message: `Some unexpected error occurred!`,
         status: 500,
       });
-    } else if (approved === false) {
+    } else if (success === false) {
       return res.status(404).json({
         message: `User with employeeId ${employeeId} not found in pending list!`,
         status: 404,
       });
     }
     res.json({
-      message: `User request approved!`,
+      message: `User request ${approveUser ? "approved" : "rejected"}!`,
       status: 200,
     });
   }
 );
 
-
-router.post(
-  "/reject/:employeeId",
+router.delete(
+  "/:employeeId",
   checkAuthentication(),
   checkRole(["admin"]),
   async (req, res) => {
@@ -106,7 +128,7 @@ router.post(
             "bearerAuth": []
     }] */
     const employeeId = req.params.employeeId;
-    const approved = await authenticationController.rejectUser(employeeId);
+    const approved = await authenticationController.removeUser(employeeId);
     if (approved === null) {
       return res.status(500).json({
         message: `Some unexpected error occurred!`,
@@ -114,7 +136,7 @@ router.post(
       });
     } else if (approved === false) {
       return res.status(404).json({
-        message: `User with employeeId ${employeeId} not found in pending list!`,
+        message: `No active user with employeeId ${employeeId} found!`,
         status: 404,
       });
     }
