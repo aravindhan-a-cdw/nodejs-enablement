@@ -10,7 +10,7 @@ const jwtOptions = {
 
 const jwtVerify = async (payload, done) => {
     try {
-        const user = await UserSchema.findOne({ employeeId: payload.id });
+        const user = await UserSchema.findOne({ employeeId: payload.id }, "-password -__v -createdAt -updatedAt");
         if (user) {
           return done(null, user);
         }
