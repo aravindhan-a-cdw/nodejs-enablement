@@ -43,7 +43,9 @@ app.use(
 // Add routes
 app.use("/api/v1", authRoutes);
 app.use("/api/v1", searchRoutes
-  // #swagger.tags = ['Search']
+  /* 
+    #swagger.tags = ['Search']
+  */
 );
 app.use(
   "/api/v1",
@@ -54,11 +56,8 @@ app.use(
   "/api/v1",
   profileRoutes
   /* 
-  #swagger.tags = ['Profile']
-  #swagger.security = [{
-    "bearerAuth": []
-    }]
-    */
+    #swagger.tags = ['Profile']
+  */
   );
 
 // Error Handling middleware
