@@ -78,15 +78,21 @@ const authenticationController = {
   },
   login: async (user) => {
     try {
-      if (user.status === "pending") {
+      if (user.status === USER.STATUS[0]) {
         return {
           message: "You are not yet approved by admin!",
           status: 401,
         };
-      } else if (user.status === "rejected") {
+      } else if (user.status === USER.STATUS[2]) {
         return {
           message:
             "You are signup is rejected by admin! Try signing up again after 2 days",
+          status: 401,
+        };
+      } else if (user.status === USER.STATUS[3]) {
+        return {
+          message:
+            "Your account is inactive! Kindly contact admin if mistaken!",
           status: 401,
         };
       }
