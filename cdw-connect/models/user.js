@@ -31,7 +31,18 @@ const UserSchema = new Schema(
     },
     password: { type: String, required: true },
   },
-  { timestamps: true }
+  { 
+    timestamps: true, // to add createdAt and updatedAt fields
+    toJSON: {
+      transform: function(doc, ret) {
+        delete ret.password;
+        delete ret._id;
+        delete ret.status;
+        delete ret.role;
+        return ret;
+      }
+    }
+  }
 );
 
 UserSchema.pre("save", async function (next) {
