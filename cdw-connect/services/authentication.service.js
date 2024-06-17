@@ -8,9 +8,20 @@ const pendingApprovals = async () => {
     {
       status: "pending",
     },
-    "name email employeeId createdAt"
+    "employeeId"
   ).exec();
   return pendingUsers;
+};
+
+const getPendingUser = async (employeeId) => {
+  const pendingUser = await UserModel.find(
+    {
+      employeeId: employeeId,
+      status: "pending",
+    },
+    "name email employeeId createdAt"
+  ).exec();
+  return pendingUser;
 };
 
 const signUp = async (userData) => {
@@ -89,4 +100,4 @@ const removeUser = async (employeeId) => {
   return true;
 }
 
-module.exports = { signUp, pendingApprovals, approveUser, rejectUser, removeUser };
+module.exports = { signUp, pendingApprovals, getPendingUser, approveUser, rejectUser, removeUser };

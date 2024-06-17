@@ -71,8 +71,27 @@ router.get(
   }
 );
 
+router.get(
+  "/pending/:employeeId",
+  checkAuthentication(),
+  checkRole(["admin"]),
+  async (req, res, next) => {
+    // #swagger.tags = ['Admin']
+    /* #swagger.security = [{
+            "bearerAuth": []
+    }] */
+    try {
+      const pendingResponse =
+        await authenticationController.getPendingApprovals();
+      res.status(pendingResponse.status).json(pendingResponse);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 router.post(
-  "/approve/:employeeId",
+  "/pending/:employeeId/approve",
   checkAuthentication(),
   checkRole(["admin"]),
   async (req, res) => {
@@ -119,7 +138,7 @@ router.post(
 );
 
 router.delete(
-  "/:employeeId",
+  "/pending/:employeeId",
   checkAuthentication(),
   checkRole(["admin"]),
   async (req, res) => {

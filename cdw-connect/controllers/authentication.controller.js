@@ -115,6 +115,14 @@ const authenticationController = {
       status: 200,
     };
   },
+  getPendingUser: async () => {
+    const pendingUser =
+      await authenticationService.getPendingUser();
+    return {
+      requests: pendingUser,
+      status: 200,
+    };
+  },
   approveUser: async (employeeId) => {
     try {
       const response = await authenticationService.approveUser(employeeId);
