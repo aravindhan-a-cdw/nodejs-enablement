@@ -20,6 +20,17 @@ const doc = {
       email: "kokki.kumar@cdw.com",
       password: "SuperSecret",
     },
+    EditProfile: {
+      name: "Kokki Kumar",
+      gender: "male",
+      profilePicture: "https://img.ur/kokki.jpg",
+      profileBio: "En peru kokki, Kokki Kumaru",
+      latestWorkDesignation: "People Management",
+      cerfitications: "Certified expert in handling Knife",
+      experience: "10",
+      businessUnit: "Security",
+      workLocation: "Chennai",
+    }
   },
   securityDefinitions: {
     bearerAuth: {
