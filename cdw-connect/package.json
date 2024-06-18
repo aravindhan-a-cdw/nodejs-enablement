@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "swagger": "node config/swagger.js",
     "dev": "nodemon --ignore '*.json' index.js"
   },
@@ -30,6 +30,8 @@
     "winston": "^3.13.0"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
+    "mockingoose": "^2.16.2",
     "nodemon": "^3.1.3",
     "swagger-autogen": "^2.23.7"
   }
