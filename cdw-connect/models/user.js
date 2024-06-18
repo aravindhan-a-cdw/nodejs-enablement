@@ -13,8 +13,8 @@ const UserSchema = new Schema(
     profilePicture: { type: String },
     profileBio: { type: String },
     latestWorkDesignation: { type: String },
-    certifications: { type: String },
-    experience: { type: Number },
+    certifications: { type: [String] },
+    experience: { type: String },
     businessUnit: { type: String },
     workLocation: { type: String },
     status: {

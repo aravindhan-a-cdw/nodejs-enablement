@@ -14,7 +14,7 @@ const pendingApprovals = async () => {
 };
 
 const getPendingUser = async (employeeId) => {
-  const pendingUser = await UserModel.find(
+  const pendingUser = await UserModel.findOne(
     {
       employeeId: employeeId,
       status: "pending",

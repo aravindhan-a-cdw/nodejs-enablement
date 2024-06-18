@@ -125,7 +125,7 @@ const authenticationController = {
     const pendingUser =
       await authenticationService.getPendingUser();
     return {
-      requests: pendingUser,
+      data: pendingUser,
       status: 200,
     };
   },
