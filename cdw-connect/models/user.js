@@ -8,7 +8,7 @@ const UserSchema = new Schema(
   {
     name: { type: String, required: true, maxLength: 128 },
     email: { type: String, required: true, unique: true },
-    employeeId: { type: Number, required: true, unique: true },
+    employeeId: { type: String, required: true, unique: true },
     gender: { type: String, required: true, enum: USER.GENDER },
     profilePicture: { type: String },
     profileBio: { type: String },

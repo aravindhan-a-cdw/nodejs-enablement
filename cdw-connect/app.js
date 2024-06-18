@@ -2,6 +2,7 @@ const express = require("express");
 const swaggerUi = require("swagger-ui-express");
 const passport = require("passport");
 require("dotenv").config();
+require("./utils/cron"); // Add cron schedules
 const { logger, loggerMiddleware } = require("./config/logger");
 const { jwtStrategy, localStrategy } = require("./config/passport");
 const authRoutes = require("./routes/authentication");
