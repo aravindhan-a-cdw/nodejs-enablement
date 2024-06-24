@@ -1,160 +1,135 @@
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const authenticationService = require("../services/authentication.service");
-const { AUTHENTICATION_ERRORS } = require("../constants/error");
-const { USER } = require("../constants/schema");
+const { AUTHENTICATION_ERRORS, LOGIN_ERRORS } = require("../constants/error");
+const { USER } = require("../constants/enum");
 const { logger } = require("../config/logger");
+const { HTTPError } = require("../types/response");
+const { StatusCodes } = require("http-status-codes");
+const { AUTHENTICATION_MESSAGES } = require("../constants/success");
 
 const authenticationController = {
-  signUp: async (data) => {
+  signUp: async (req, res, next) => {
     try {
-      const {created, user} = await authenticationService.signUp(data);
-      if (user.role === USER.ROLES[0]) {
-        if(created) {
-          return {
-            message:
-              "User registration successful! Kindly wait for admin to approve.",
-            status: 200,
-          };
-        } else {
-          if(user.status === USER.STATUS[0]) {
-            return {
-              message: "Your request is pending! Wait for the admin to approve!",
-              status: 409
-            }
-          } else if (user.status === USER.STATUS[2]) {
-            const twoDaysBefore = new Date();
-            twoDaysBefore.setDate(twoDaysBefore.getDate() - 1);
-            if(user.updatedAt > twoDaysBefore) {
-              return {
-                message: "Your request is rejected! You need to wait for 2 days before reapplying!",
-                status: 409
-              }
-            } else {
-              user.status = USER.STATUS[0];
-              await user.save();
-              return {
-                message:
-                  "User registration successful! Kindly wait for admin to approve.",
-                status: 200,
-              };
-            }
-          }
+      const userData = req.body;
+      const user = await authenticationService.signUp(userData);
+      if (user.role === USER.ROLES.ADMIN) {
+        res.locals.responseData = {
+          message: AUTHENTICATION_MESSAGES.SIGNUP_SUCCESS,
+          status: StatusCodes.CREATED
         }
       } else {
-        user.status = "active";
-        await user.save();
-        return {
-          message: `Welcome ${user.name}! Your registration is successful!`,
-          status: 200,
-        };
+        res.locals.responseData = {
+          message: AUTHENTICATION_MESSAGES.ADMIN_SIGNUP_SUCCESS,
+          status: StatusCodes.CREATED
+        }
       }
     } catch (err) {
-      if (err.message === AUTHENTICATION_ERRORS.USER_NOT_EXIST_IN_WALLET_DB) {
-        return {
-          message: `User with given data doesn't exist in wallet db`,
-          status: 400,
-        };
-      } else if (err instanceof mongoose.Error.ValidationError) {
-        return {
-          message: err.message,
-          status: 422,
-        };
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new HTTPError(err.message, StatusCodes.UNPROCESSABLE_ENTITY));
       } else if (err.name === "MongoServerError") {
         if (err.code === 11000) {
-          return {
-            message: `User already exists for the given data`,
-            status: 400,
-          };
+          next(new HTTPError(AUTHENTICATION_ERRORS.USER_ALREADY_EXISTS, StatusCodes.BAD_REQUEST));
         }
-      } else {
-        logger.error(err.message);
-        return {
-          message: "Something unexpected has happened! Try after some time!",
-          status: 500,
-        };
       }
+      next(err);
     }
+    next();
   },
-  login: async (user) => {
+  login: async (req, res, next) => {
     try {
-      if (user.status === USER.STATUS[0]) {
-        return {
-          message: "You are not yet approved by admin!",
-          status: 401,
-        };
-      } else if (user.status === USER.STATUS[2]) {
-        return {
-          message:
-            "You are signup is rejected by admin! Try signing up again after 2 days",
-          status: 401,
-        };
-      } else if (user.status === USER.STATUS[3]) {
-        return {
-          message:
-            "Your account is inactive! Kindly contact admin if mistaken!",
-          status: 401,
-        };
+      const user = req.user;
+      if (user.status === USER.STATUS.PENDING) {
+        throw new HTTPError(LOGIN_ERRORS.REQUEST_NOT_APPROVED, StatusCodes.BAD_REQUEST);
+      } else if (user.status === USER.STATUS.PENDING) {
+        throw new HTTPError(LOGIN_ERRORS.REQUEST_REJECTED_WAIT_2_DAYS, StatusCodes.BAD_REQUEST);
+      } else if (user.status === USER.STATUS.INACTIVE) {
+        throw new HTTPError(LOGIN_ERRORS.INACTIVE_USER, StatusCodes.BAD_REQUEST);
       }
       const token = jwt.sign(
         { id: user.employeeId, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: "30m" }
       );
-      return {
+      res.locals.responseData = {
         message: "Login successfull!",
-        token: token,
+        data: token,
+        statusCode: 200,
+      }
+    } catch (err) {
+      next(err);
+    }
+    next();
+  },
+  getPendingApprovals: async (req, res, next) => {
+    try {
+      const pendingApprovalRequests =
+        await authenticationService.pendingApprovals();
+      res.locals.responseData = {
         status: 200,
+        data: pendingApprovalRequests,
       };
-    } catch (err) {
-      return {
-        message: "Something unexpected has happened! Try after some time!",
-        status: 500,
+    } catch (error) {
+      next(error);
+    }
+    next();
+  },
+  getPendingUser: async (req, res, next) => {
+    try {
+      const pendingUser = await authenticationService.getPendingUser();
+      res.locals.responseData = {
+        status: 200,
+        data: pendingUser,
       };
+    } catch (error) {
+      next(error);
     }
+    next();
   },
-  getPendingApprovals: async () => {
-    const pendingApprovalRequests =
-      await authenticationService.pendingApprovals();
-    return {
-      requests: pendingApprovalRequests,
-      status: 200,
-    };
-  },
-  getPendingUser: async () => {
-    const pendingUser =
-      await authenticationService.getPendingUser();
-    return {
-      data: pendingUser,
-      status: 200,
-    };
-  },
-  approveUser: async (employeeId) => {
+  approveUser: async (req, res, next) => {
     try {
-      const response = await authenticationService.approveUser(employeeId);
-      return response;
-    } catch (err) {
-      logger.error(err.message);
-      return null;
+      const employeeId = req.params.employeeId;
+      const approveUser = req.body.approve;
+
+      // Handled when approve is not provided in the body
+      if (approveUser === undefined) {
+        throw HTTPError(
+          "Not able to process the data. Key 'approve' not found in body!",
+          429
+        );
+      }
+
+      // Approve or reject user
+      if (approveUser) {
+        await authenticationService.approveUser(employeeId);
+      } else {
+        await authenticationService.rejectUser(employeeId);
+      }
+
+      // Set response
+      res.locals.responseData = {
+        statusCode: 200,
+        message: `User request has been successfully ${
+          approveUser ? "approved" : "rejected"
+        }!`,
+      };
+    } catch (error) {
+      next(error);
     }
+    next();
   },
-  rejectUser: async (employeeId) => {
+  removeUser: async (req, res, next) => {
     try {
-      const response = await authenticationService.rejectUser(employeeId);
-      return response;
-    } catch (err) {
-      logger.error(err.message);
-      return null;
-    }
-  },
-  removeUser: async (employeeId) => {
-    try {
+      const employeeId = req.params.employeeId;
       const response = await authenticationService.removeUser(employeeId);
-      return response;
-    } catch (err) {
-      logger.error(err.message);
-      return null;
+      res.locals.responseData = {
+        statusCode: 200,
+        message: "User have been removed successfully!",
+      };
+    } catch (error) {
+      next(error);
     }
+    next();
   },
 };
 

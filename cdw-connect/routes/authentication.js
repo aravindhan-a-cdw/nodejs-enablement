@@ -6,30 +6,32 @@ const {
   checkRole,
   checkAuthentication,
 } = require("../middlewares/authentication.middleware");
+const { HTTPError } = require("../types/response");
+const { StatusCodes } = require("http-status-codes");
 
-router.post("/login", function (req, res, next) {
-  // #swagger.tags = ['Auth']
-  // #swagger.summary = "This is the route to login user"
-  /*  #swagger.parameters['body'] = {
+router.post(
+  "/login",
+  function (req, res, next) {
+    // #swagger.tags = ['Auth']
+    // #swagger.summary = "This is the route to login user"
+    /*  #swagger.parameters['body'] = {
             in: 'body',
             description: 'User Login',
             schema: { $ref: '#/definitions/LoginUser' }
     } */
-  passport.authenticate(
-    "local",
-    { session: false },
-    async (err, user, info) => {
+    passport.authenticate("local", { session: false }, (err, user, info) => {
       if (err || !user) {
-        return res.status(400).json({
-          message: "Email or password is incorrect!",
-          status: 400,
-        });
+        next(new HTTPError(
+          "Email or password is incorrect",
+          StatusCodes.BAD_REQUEST
+        ));
       }
-      const response = await authenticationController.login(user);
-      res.status(response.status).json(response);
-    }
-  )(req, res, next);
-});
+      req.user = user;
+      next();
+    })(req, res, next);
+  },
+  authenticationController.login
+);
 
 router.post("/signup", (req, res, next) => {
   /*  
@@ -40,7 +42,6 @@ router.post("/signup", (req, res, next) => {
       schema: { $ref: '#/definitions/AddUser' }
     } 
   */
-  const userData = req.body;
   const signUpResponse = authenticationController.signUp(userData);
 
   signUpResponse
@@ -94,47 +95,7 @@ router.post(
   "/pending/:employeeId/approve",
   checkAuthentication(),
   checkRole(["admin"]),
-  async (req, res) => {
-    /* 
-      #swagger.tags = ['Admin']
-      #swagger.security = [{
-        "bearerAuth": []
-      }]
-      #swagger.parameters['body'] = {
-        in: 'body',
-        description: 'Approve or reject user',
-        schema: { approve: true }
-      }
-    */
-    const employeeId = req.params.employeeId;
-    const approveUser = req.body.approve;
-    if(approveUser === undefined) {
-      return res.status(429).json({
-        message: "Not able to process the data. Key approve not found!"
-      });
-    }
-    let success = null;
-    if(approveUser) {
-      success = await authenticationController.approveUser(employeeId);
-    } else {
-      success = await authenticationController.rejectUser(employeeId);
-    }
-    if (success === null) {
-      return res.status(500).json({
-        message: `Some unexpected error occurred!`,
-        status: 500,
-      });
-    } else if (success === false) {
-      return res.status(404).json({
-        message: `User with employeeId ${employeeId} not found in pending list!`,
-        status: 404,
-      });
-    }
-    res.json({
-      message: `User request ${approveUser ? "approved" : "rejected"}!`,
-      status: 200,
-    });
-  }
+  authenticationController.approveUser
 );
 
 router.delete(
@@ -146,23 +107,6 @@ router.delete(
     /* #swagger.security = [{
             "bearerAuth": []
     }] */
-    const employeeId = req.params.employeeId;
-    const approved = await authenticationController.removeUser(employeeId);
-    if (approved === null) {
-      return res.status(500).json({
-        message: `Some unexpected error occurred!`,
-        status: 500,
-      });
-    } else if (approved === false) {
-      return res.status(404).json({
-        message: `No active user with employeeId ${employeeId} found!`,
-        status: 404,
-      });
-    }
-    res.json({
-      message: `User request rejected!`,
-      status: 200,
-    });
   }
 );
 
