@@ -4,6 +4,7 @@ const authenticationService = require("../services/authentication.service");
 const { AUTHENTICATION_ERRORS, LOGIN_ERRORS } = require("../constants/error");
 const { USER } = require("../constants/enum");
 const { logger } = require("../config/logger");
+const { ADMIN_ERRORS } = require("../constants/error");
 const { HTTPError } = require("../types/response");
 const { StatusCodes } = require("http-status-codes");
 const { AUTHENTICATION_MESSAGES } = require("../constants/success");
@@ -15,12 +16,12 @@ const authenticationController = {
       const user = await authenticationService.signUp(userData);
       if (user.role === USER.ROLES.ADMIN) {
         res.locals.responseData = {
-          message: AUTHENTICATION_MESSAGES.SIGNUP_SUCCESS,
+          message: AUTHENTICATION_MESSAGES.ADMIN_SIGNUP_SUCCESS,
           status: StatusCodes.CREATED
         }
       } else {
         res.locals.responseData = {
-          message: AUTHENTICATION_MESSAGES.ADMIN_SIGNUP_SUCCESS,
+          message: AUTHENTICATION_MESSAGES.SIGNUP_SUCCESS,
           status: StatusCodes.CREATED
         }
       }
@@ -76,7 +77,11 @@ const authenticationController = {
   },
   getPendingUser: async (req, res, next) => {
     try {
-      const pendingUser = await authenticationService.getPendingUser();
+      const employeeId = req.params.employeeId;
+      if(employeeId === undefined) {
+        throw new HTTPError(ADMIN_ERRORS.NOT_VALID_INPUT, StatusCodes.BAD_REQUEST)
+      }
+      const pendingUser = await authenticationService.getPendingUser(employeeId);
       res.locals.responseData = {
         status: 200,
         data: pendingUser,
@@ -100,7 +105,7 @@ const authenticationController = {
       }
 
       // Approve or reject user
-      if (approveUser) {
+      if (approveUser === "true") {
         await authenticationService.approveUser(employeeId);
       } else {
         await authenticationService.rejectUser(employeeId);
@@ -110,7 +115,7 @@ const authenticationController = {
       res.locals.responseData = {
         statusCode: 200,
         message: `User request has been successfully ${
-          approveUser ? "approved" : "rejected"
+          approveUser === "true" ? "approved" : "rejected"
         }!`,
       };
     } catch (error) {
