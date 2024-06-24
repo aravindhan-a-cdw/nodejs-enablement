@@ -9,6 +9,9 @@ const authRoutes = require("./routes/authentication");
 const postRoutes = require("./routes/posts");
 const profileRoutes = require("./routes/profile");
 const searchRoutes = require("./routes/search");
+// const swaggerDocument = require('./public/swagger.json');
+const { formatResponse, errorHandler } = require("./types/response");
+
 
 if (process.env.ENVIRONMENT === "dev") {
   require("./config/swagger");
@@ -35,11 +38,15 @@ const options = {
     url: "/swagger.json",
   },
 };
+
+// app.get("/api-docs/swagger.json", (req, res) => res.json(swaggerDocument));
+
 app.use(
   "/api-docs",
   swaggerUi.serveFiles(null, options),
   swaggerUi.setup(null, options)
 );
+
 
 // Add routes
 app.use("/api/v1", authRoutes);
@@ -61,11 +68,10 @@ app.use(
   */
   );
 
+// Response middleware
+app.use(formatResponse);
+
 // Error Handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  logger.error(err.message);
-  res.status(500).send("Something broke!");
-});
+app.use(errorHandler);
 
 module.exports = app;
