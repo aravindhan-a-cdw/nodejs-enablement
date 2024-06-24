@@ -1,3 +1,8 @@
+/*
+    Author: Aravindhan A
+    This file contains the configs for logging
+*/
+
 const { createLogger, transports, format, error, debug } = require('winston');
 const path = require('path');
 
