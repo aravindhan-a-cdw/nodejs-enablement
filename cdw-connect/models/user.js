@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const { USER } = require("../constants/schema");
+const { USER } = require("../constants/enum");
 
 const Schema = mongoose.Schema;
 
@@ -21,13 +21,13 @@ const UserSchema = new Schema(
       type: String,
       required: true,
       enum: USER.STATUS,
-      default: USER.STATUS[0],
+      default: USER.STATUS.PENDING,
     },
     role: {
       type: String,
       required: true,
       enum: USER.ROLES,
-      default: USER.ROLES[0],
+      default: USER.ROLES.USER,
     },
     password: { type: String, required: true },
   },
