@@ -15,8 +15,12 @@ const LOGIN_ERRORS = {
     INACTIVE_USER: "Your account is inactive! Kindly contact admin if mistaken!",
 }
 
+const ADMIN_ERRORS = {
+    NOT_VALID_INPUT: "Your input is not valid!",
+}
+
 const COMMON_ERRORS = {
     UNEXPECTED_ERROR: "Something unexpected has happened! Try after some time or reach out to support team!"
 }
 
-module.exports = {AUTHENTICATION_ERRORS, COMMON_ERRORS, LOGIN_ERRORS}
+module.exports = {AUTHENTICATION_ERRORS, COMMON_ERRORS, LOGIN_ERRORS, ADMIN_ERRORS}
