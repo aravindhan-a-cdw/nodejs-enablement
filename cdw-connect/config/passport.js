@@ -1,7 +1,7 @@
 const { Strategy, ExtractJwt } = require('passport-jwt');
 const {Strategy: LocalStrategy} = require('passport-local');
 const UserSchema = require('../models/user');
-const { USER } = require('../constants/schema');
+const { USER } = require('../constants/enum');
 
 
 const jwtOptions = {
@@ -11,13 +11,12 @@ const jwtOptions = {
 
 const jwtVerify = async (payload, done) => {
     try {
-        const user = await UserSchema.findOne({ employeeId: payload.id, status: USER.STATUS[1] }, "-password -__v -createdAt -updatedAt");
+        const user = await UserSchema.findOne({ employeeId: payload.id, status: USER.STATUS.ACTIVE }, "-password -__v -createdAt -updatedAt");
         if (user) {
           return done(null, user);
         }
         return done(null, false);
       } catch (err) {
-        console.error(err);
         return done(err, false);
       }
 };
