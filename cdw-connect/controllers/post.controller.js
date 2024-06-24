@@ -2,11 +2,15 @@ const { logger } = require("../config/logger");
 const postService = require("../services/post.service");
 
 const postController = {
-  getPosts: async (req, res) => {
-    const posts = await postService.getPosts();
-    res.json({
-      posts,
-    });
+  getPosts: async (req, res, next) => {
+    try {
+      const filterBy = req.query.email;
+      const posts = await postService.getPosts(filterBy);
+      res.locals.responseData = {data: posts};
+      next();
+    } catch (error) {
+      next(error);
+    }
   },
   getPost: async (req, res) => {
     const postId = req.params.postId;
