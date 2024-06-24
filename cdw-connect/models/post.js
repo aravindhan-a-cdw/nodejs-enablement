@@ -37,6 +37,8 @@ const PostSchema = new Schema(
   }
 );
 
+PostSchema.index({title: "text", location: "text", caption: "text"});
+
 const PostModel = mongoose.model("Post", PostSchema);
 const CommentModel = mongoose.model("Comment", CommentSchema);
 

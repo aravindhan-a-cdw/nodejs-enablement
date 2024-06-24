@@ -31,17 +31,17 @@ const UserSchema = new Schema(
     },
     password: { type: String, required: true },
   },
-  { 
+  {
     timestamps: true, // to add createdAt and updatedAt fields
     toJSON: {
-      transform: function(doc, ret) {
+      transform: function (doc, ret) {
         delete ret.password;
         delete ret._id;
         delete ret.status;
         delete ret.role;
         return ret;
-      }
-    }
+      },
+    },
   }
 );
 
@@ -60,5 +60,7 @@ UserSchema.pre("save", async function (next) {
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+UserSchema.index({ name: "text", latestWorkDesignation: "text" });
 
 module.exports = mongoose.model("User", UserSchema);
