@@ -21,10 +21,12 @@ router.post(
     } */
     passport.authenticate("local", { session: false }, (err, user, info) => {
       if (err || !user) {
-        next(new HTTPError(
-          "Email or password is incorrect",
-          StatusCodes.BAD_REQUEST
-        ));
+        next(
+          new HTTPError(
+            "Email or password is incorrect",
+            StatusCodes.BAD_REQUEST
+          )
+        );
       }
       req.user = user;
       next();
@@ -33,7 +35,8 @@ router.post(
   authenticationController.login
 );
 
-router.post("/signup", (req, res, next) => {
+router.post(
+  "/signup",
   /*  
     #swagger.tags = ['Auth']
     #swagger.parameters['body'] = {
@@ -42,59 +45,45 @@ router.post("/signup", (req, res, next) => {
       schema: { $ref: '#/definitions/AddUser' }
     } 
   */
-  const signUpResponse = authenticationController.signUp(userData);
-
-  signUpResponse
-    .then((response) => {
-      res.status(response.status).json(response);
-    })
-    .catch((err) => {
-      next(err);
-    });
-});
+  authenticationController.signUp
+);
 
 router.get(
   "/pending",
   checkAuthentication(),
   checkRole(["admin"]),
-  async (req, res, next) => {
-    // #swagger.tags = ['Admin']
-    /* #swagger.security = [{
-            "bearerAuth": []
-    }] */
-    try {
-      const pendingResponse =
-        await authenticationController.getPendingApprovals();
-      res.status(pendingResponse.status).json(pendingResponse);
-    } catch (err) {
-      next(err);
-    }
-  }
+  /* 
+    #swagger.tags = ['Admin']
+    #swagger.security = [{
+      "bearerAuth": []
+    }] 
+  */
+  authenticationController.getPendingApprovals
 );
 
 router.get(
   "/pending/:employeeId",
   checkAuthentication(),
   checkRole(["admin"]),
-  async (req, res, next) => {
-    // #swagger.tags = ['Admin']
-    /* #swagger.security = [{
-            "bearerAuth": []
-    }] */
-    try {
-      const pendingResponse =
-        await authenticationController.getPendingApprovals();
-      res.status(pendingResponse.status).json(pendingResponse);
-    } catch (err) {
-      next(err);
-    }
-  }
+  /* 
+    #swagger.tags = ['Admin']
+    #swagger.security = [{
+              "bearerAuth": []
+    }] 
+  */
+  authenticationController.getPendingUser
 );
 
 router.post(
   "/pending/:employeeId/approve",
   checkAuthentication(),
   checkRole(["admin"]),
+  /* 
+    #swagger.tags = ['Admin']
+    #swagger.security = [{
+              "bearerAuth": []
+    }] 
+  */
   authenticationController.approveUser
 );
 
@@ -102,12 +91,13 @@ router.delete(
   "/pending/:employeeId",
   checkAuthentication(),
   checkRole(["admin"]),
-  async (req, res) => {
-    // #swagger.tags = ['Admin']
-    /* #swagger.security = [{
-            "bearerAuth": []
-    }] */
-  }
+  /* 
+    #swagger.tags = ['Admin']
+    #swagger.security = [{
+      "bearerAuth": []
+    }] 
+  */
+  authenticationController.removeUser
 );
 
 module.exports = router;
