@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const {logger} = require('../config/logger');
 
 mongoose.set("strictQuery", false);
 
@@ -9,7 +10,7 @@ async function connect() {
 }
 
 mongoose.connection.on('error', (err) => {
-  console.log(`Failed to connect to MongoDB: ${err.message}`);
+  logger.error(`Failed to connect to MongoDB: ${err.message}`);
 });
 
 module.exports = {connect}
