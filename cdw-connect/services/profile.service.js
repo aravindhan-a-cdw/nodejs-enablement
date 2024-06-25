@@ -1,4 +1,4 @@
-exports.editProfile = async (additionalData, user) => {
+exports.editProfile = async (additionalData, user, admin = false) => {
   const keys = [
     "name",
     "gender",
@@ -10,6 +10,9 @@ exports.editProfile = async (additionalData, user) => {
     "businessUnit",
     "workLocation",
   ];
+  if(admin) {
+    keys.push("email", "password");
+  }
   for(const key of keys) {
     if(additionalData[key]) {
         user[key] = additionalData[key];
