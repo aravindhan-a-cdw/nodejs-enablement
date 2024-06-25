@@ -14,9 +14,8 @@ describe('Authentication Service', () => {
     const userData = { name: "User1", email: 'user1@cdw.com', employeeId: "0001", role: 'user', gender: "male", password: 'password123' };
     mockingoose(User).toReturn(userData, 'save');
 
-    const {created, user} = await authenticationService.signUp(userData);
+    const user = await authenticationService.signUp(userData);
 
-    expect(created).toBe(true);
     expect(user.name).toBe(userData.name);
     expect(user.email).toBe(userData.email);
   });
@@ -31,11 +30,7 @@ describe('Authentication Service', () => {
     const userData = { name: "User1", email: 'user1@cdw.com', employeeId: "0001", role: 'user', gender: "male", password: 'password123' };
     mockingoose(User).toReturn(userData, 'findOne');
 
-    const {created, user} = await authenticationService.signUp(userData);
-
-    expect(created).toBe(false);
-    expect(user.name).toBe(userData.name);
-    expect(user.email).toBe(userData.email);
+    await expect(authenticationService.signUp(userData)).rejects.toThrow(AUTHENTICATION_ERRORS.PENDING_REQUEST_EXISTS);
   });
 
   it('should get pending user', async () => {
@@ -65,13 +60,11 @@ describe('Authentication Service', () => {
     expect(result).toBe(true);
   });
 
-  it('should return false when approving an non existing user by id', async () => {
+  it('should throw error when approving an non existing user by id', async () => {
     const userData = null;
     mockingoose(User).toReturn(userData, 'findOneAndUpdate');
 
-    const result = await authenticationService.approveUser('60d5f60a18d3d80014bf0a2b');
-
-    expect(result).toBe(false);
+    await expect(authenticationService.approveUser('60d5f60a18d3d80014bf0a2b')).rejects.toThrow(AUTHENTICATION_ERRORS.NO_PENDING_USER_FOUND);
   });
 
   it('should return true when rejecting an existing user by id', async () => {
@@ -83,13 +76,11 @@ describe('Authentication Service', () => {
     expect(result).toBe(true);
   });
 
-  it('should return false when rejecting an non existing user by id', async () => {
+  it('should throw error when rejecting an non existing user by id', async () => {
     const userData = null;
     mockingoose(User).toReturn(userData, 'findOneAndUpdate');
 
-    const result = await authenticationService.rejectUser('60d5f60a18d3d80014bf0a2b');
-
-    expect(result).toBe(false);
+    await expect(authenticationService.rejectUser('60d5f60a18d3d80014bf0a2b')).rejects.toThrow(AUTHENTICATION_ERRORS.NO_PENDING_USER_FOUND);
   });
 
   it('should return true when removing an existing user by id', async () => {
@@ -101,13 +92,11 @@ describe('Authentication Service', () => {
     expect(result).toBe(true);
   });
 
-  it('should return false when removing an non existing user by id', async () => {
+  it('should throw error when removing an non existing user by id', async () => {
     const userData = null;
     mockingoose(User).toReturn(userData, 'findOneAndUpdate');
 
-    const result = await authenticationService.removeUser('60d5f60a18d3d80014bf0a2b');
-
-    expect(result).toBe(false);
+    await expect(authenticationService.removeUser('60d5f60a18d3d80014bf0a2b')).rejects.toThrow(AUTHENTICATION_ERRORS.NO_USER_FOUND);
   });
 
 });
