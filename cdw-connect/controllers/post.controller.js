@@ -1,4 +1,6 @@
 const { logger } = require("../config/logger");
+const { HTTPError } = require("../types/response");
+const { StatusCodes } = require("http-status-codes");
 const postService = require("../services/post.service");
 
 const postController = {
@@ -6,18 +8,21 @@ const postController = {
     try {
       const filterBy = req.query.email;
       const posts = await postService.getPosts(filterBy);
-      res.locals.responseData = {data: posts};
-      next();
+      res.locals.responseData = { data: posts };
     } catch (error) {
       next(error);
     }
+    next();
   },
-  getPost: async (req, res) => {
-    const postId = req.params.postId;
-    const post = await postService.getPost(postId);
-    res.json({
-      data: post,
-    });
+  getPost: async (req, res, next) => {
+    try {
+      const postId = req.params.postId;
+      const post = await postService.getPost(postId);
+      res.locals.responseData = { data: post };
+    } catch (error) {
+      next(error);
+    }
+    next();
   },
   createPost: async (req, res, next) => {
     /* 
@@ -30,24 +35,27 @@ const postController = {
                 schema: { $ref: '#/definitions/CreatePost' }
             }
     */
-    const postData = req.body;
     try {
+      const postData = req.body;
       const postInstance = await postService.createPost(postData, req.user);
-      res.json({
-        message: "Post Created successfully",
+      res.locals.responseData = {
         data: postInstance,
-      });
+        message: "Post Created successfully",
+      };
     } catch (err) {
       if (err.name === "MongoServerError") {
         if (err.code === 11000) {
-          return res.status(400).json({
-            message: `Post with given data already exists`,
-            status: 400,
-          });
+          next(
+            new HTTPError(
+              "Post with given data already exists",
+              StatusCodes.BAD_REQUEST
+            )
+          );
         }
       }
       next(err);
     }
+    next();
   },
   editPost: async (req, res, next) => {
     /* 
@@ -65,34 +73,38 @@ const postController = {
       const postData = req.body;
       const post = await postService.getPost(postId);
       if (post === null) {
-        return res.status(404).json({
-          message: "Not found!",
-        });
+        throw new HTTPError(
+          "No post found for the given id",
+          StatusCodes.NOT_FOUND
+        );
       }
       if (post.createdBy.id !== req.user.id) {
-        return res.status(403).json({
-          message:
-            "You are not allowed to edit this post! Users can only edit the post they have created!",
-        });
+        throw new HTTPError(
+          "You are not allowed to edit this post! Users can only edit their post!",
+          StatusCodes.FORBIDDEN
+        );
       }
       const editedPost = await postService.editPost(post, postData);
-      res.json({
-        message: "Post Edited successfully",
+      res.locals.responseData = {
         data: editedPost,
-      });
+        message: "Post Edited successfully",
+      };
     } catch (err) {
       if (err.name === "MongoServerError") {
         if (err.code === 11000) {
-          return res.status(400).json({
-            message: `Post with given data already exists`,
-            status: 400,
-          });
+          return next(
+            new HTTPError(
+              "Post with given data already exists",
+              StatusCodes.BAD_REQUEST
+            )
+          );
         }
       }
       next(err);
     }
+    next();
   },
-  deletePost: async (req, res) => {
+  deletePost: async (req, res, next) => {
     /* #swagger.security = [{
             "bearerAuth": []
     }] */
@@ -100,48 +112,57 @@ const postController = {
       const postId = req.params.postId;
       const post = await postService.getPost(postId);
       if (post === null) {
-        return res.status(404).json({
-          message: "Not found!",
-        });
+        throw new HTTPError(
+          "No post found for the given id",
+          StatusCodes.NOT_FOUND
+        );
       }
       if (post.createdBy.id !== req.user.id) {
-        return res.status(403).json({
-          message:
-            "You are not allowed to edit this post! Users can only edit the post they have created!",
-        });
+        throw new HTTPError(
+          "You are not allowed to delete this post! Users can only delete their post!",
+          StatusCodes.FORBIDDEN
+        );
       }
-      const editedPost = await postService.deletePost(postId);
-      res.json({
-        message: "Post Deleted successfully"
-      });
+      await postService.deletePost(postId);
+      res.locals.responseData = {
+        message: "Post deleted successfully",
+      };
     } catch (err) {
       next(err);
     }
+    next();
   },
-  likePost: async (req, res) => {
+  likePost: async (req, res, next) => {
     /* #swagger.security = [{
             "bearerAuth": []
     }] */
-   const user = req.user;
-   const postId = req.params.postId;
-   const post = await postService.getPost(postId);
-   if(post === null) {
-    return res.status(404).json({
-      message: "Post not found!"
-    })
-   }
-    const liked = await postService.likePost(post, user);
-    if(liked === null) {
-      return res.status(409).json({
-        message: "Post already liked"
-      })
+    try {
+      const user = req.user;
+      const postId = req.params.postId;
+      const post = await postService.getPost(postId);
+      if (post === null) {
+        throw new HTTPError(
+          "No post found for the given id",
+          StatusCodes.NOT_FOUND
+        );
+      }
+      const liked = await postService.likePost(post, user);
+      if (liked === null) {
+        throw new HTTPError(
+          "You have already liked this post",
+          StatusCodes.CONFLICT
+        );
+      }
+      res.locals.responseData = {
+        message: "Post Liked successfully",
+        data: { likes: post.likes.length },
+      };
+    } catch (error) {
+      next(error);
     }
-    res.json({
-      message: "Post Liked successfully",
-      data: post.likes.length
-    });
+    next();
   },
-  commentPost: async (req, res) => {
+  commentPost: async (req, res, next) => {
     /* 
       #swagger.security = [{
         "bearerAuth": []
@@ -152,21 +173,25 @@ const postController = {
           schema: { $ref: '#/definitions/CreateComment' }
       }
     */
-   const post = await postService.getPost(req.params.postId);
-   const commentData = req.body;
-   const user = req.user;
+    try {
+      const post = await postService.getPost(req.params.postId);
+      const commentData = req.body;
+      const user = req.user;
 
-   if(post === null) {
-    return res.status(404).json({
-      message: "Post not found!"
-    })
-   }
-
-   await postService.addCommentToPost(commentData, post, user);
-
-    res.json({
-      message: "Post Commented successfully",
-    });
+      if (post === null) {
+        throw new HTTPError(
+          "No post found for the given id",
+          StatusCodes.NOT_FOUND
+        );
+      }
+      await postService.addCommentToPost(commentData, post, user);
+      res.locals.responseData = {
+        message: "Post Commented successfully",
+      };
+    } catch (error) {
+      next(error);
+    }
+    next();
   },
 };
 

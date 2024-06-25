@@ -5,13 +5,13 @@ const searchController = {
         try {
             const query = req.query.query;
             const result = await searchService.search(query);
-            res.json({
-                result,
-                status: 200
-            })
+            res.locals.responseData = {
+                data: result
+            }
         } catch (error) {
             next(error);
         }
+        next();
     }
 }
 

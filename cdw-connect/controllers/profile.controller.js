@@ -7,7 +7,14 @@ const getProfile = (req, res) => {
         "bearerAuth": []
     }]
 */
-    res.json(req.user);
+    try{
+        res.locals.responseData = {
+            data: req.user
+        }
+    } catch (error) {
+        next(error);
+    }
+    next();
 };
 
 const editProfile = async (req, res, next) => {
@@ -24,10 +31,13 @@ const editProfile = async (req, res, next) => {
     try {
         const additionalData = req.body;
         const updatedUser = await profileService.editProfile(additionalData, req.user);
-        res.json(updatedUser);
-    } catch (err) {
-        logger.error(err.message);
+        res.locals.responseData = {
+            data: updatedUser
+        }
+    } catch (error) {
+        next(error)
     }
+    next();
 };
 
 module.exports = { getProfile, editProfile };
