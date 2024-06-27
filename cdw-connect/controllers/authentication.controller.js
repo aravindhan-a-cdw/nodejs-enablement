@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const authenticationService = require("../services/authentication.service");
+const UserModel = require("../models/user");
 const { AUTHENTICATION_ERRORS, LOGIN_ERRORS } = require("../constants/error");
 const { USER } = require("../constants/enum");
 const { logger } = require("../config/logger");
@@ -8,6 +9,16 @@ const { ADMIN_ERRORS } = require("../constants/error");
 const { HTTPError } = require("../types/response");
 const { StatusCodes } = require("http-status-codes");
 const { AUTHENTICATION_MESSAGES } = require("../constants/success");
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: 587,
+  auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD
+  }
+});
 
 const authenticationController = {
   signUp: async (req, res, next) => {
@@ -94,7 +105,7 @@ const authenticationController = {
   approveUser: async (req, res, next) => {
     try {
       const employeeId = req.params.employeeId;
-      const approveUser = req.body.approve;
+      const approveUser = req.body.approve === "true";
 
       // Handled when approve is not provided in the body
       if (approveUser === undefined) {
@@ -105,17 +116,25 @@ const authenticationController = {
       }
 
       // Approve or reject user
-      if (approveUser === "true") {
+      if (approveUser) {
         await authenticationService.approveUser(employeeId);
       } else {
         await authenticationService.rejectUser(employeeId);
       }
+      
+      const user = await UserModel.findOne({employeeId});
+      const info = transporter.sendMail({
+        from: '"CDW Connect Support" <cdwconnect.support@ethereal.email>',
+        to: user.email, // list of receivers
+        subject: `User Request ${approveUser ? "Approved" : "Rejected"}`,
+        text: `Hi ${user.name}, You user registration has been ${approveUser ? "Approved" : "Rejected"} by the admin.`,
+      });
 
       // Set response
       res.locals.responseData = {
         statusCode: 200,
         message: `User request has been successfully ${
-          approveUser === "true" ? "approved" : "rejected"
+          approveUser ? "approved" : "rejected"
         }!`,
       };
     } catch (error) {
