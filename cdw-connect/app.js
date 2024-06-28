@@ -1,3 +1,8 @@
+/*
+    Author: Aravindhan A
+    This file contains the express application with middlewares
+*/
+
 const express = require("express");
 const swaggerUi = require("swagger-ui-express");
 const passport = require("passport");
@@ -9,7 +14,6 @@ const authRoutes = require("./routes/authentication");
 const postRoutes = require("./routes/posts");
 const profileRoutes = require("./routes/profile");
 const searchRoutes = require("./routes/search");
-// const swaggerDocument = require('./public/swagger.json');
 const { formatResponse, errorHandler } = require("./types/response");
 
 
@@ -38,8 +42,6 @@ const options = {
     url: "/swagger.json",
   },
 };
-
-// app.get("/api-docs/swagger.json", (req, res) => res.json(swaggerDocument));
 
 app.use(
   "/api-docs",

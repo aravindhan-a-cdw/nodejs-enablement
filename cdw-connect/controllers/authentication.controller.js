@@ -4,11 +4,11 @@ const authenticationService = require("../services/authentication.service");
 const UserModel = require("../models/user");
 const { AUTHENTICATION_ERRORS, LOGIN_ERRORS } = require("../constants/error");
 const { USER } = require("../constants/enum");
-const { logger } = require("../config/logger");
 const { ADMIN_ERRORS } = require("../constants/error");
 const { HTTPError } = require("../types/response");
 const { StatusCodes } = require("http-status-codes");
 const { AUTHENTICATION_MESSAGES } = require("../constants/success");
+const { MAIL_CONSTANTS } = require("../constants/mail");
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
@@ -61,10 +61,10 @@ const authenticationController = {
       const token = jwt.sign(
         { id: user.employeeId, role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: "30m" }
+        { expiresIn: process.env.JWT_EXPIRATION }
       );
       res.locals.responseData = {
-        message: "Login successfull!",
+        message: AUTHENTICATION_MESSAGES.LOGIN_SUCCESS,
         data: token,
         statusCode: 200,
       }
@@ -110,8 +110,8 @@ const authenticationController = {
       // Handled when approve is not provided in the body
       if (approveUser === undefined) {
         throw HTTPError(
-          "Not able to process the data. Key 'approve' not found in body!",
-          429
+          AUTHENTICATION_ERRORS.KEY_APPROVE_NOT_FOUND,
+          StatusCodes.UNPROCESSABLE_ENTITY
         );
       }
 
@@ -124,18 +124,16 @@ const authenticationController = {
       
       const user = await UserModel.findOne({employeeId});
       const info = transporter.sendMail({
-        from: '"CDW Connect Support" <cdwconnect.support@ethereal.email>',
+        from: MAIL_CONSTANTS.EMAIL_SENDER,
         to: user.email, // list of receivers
-        subject: `User Request ${approveUser ? "Approved" : "Rejected"}`,
-        text: `Hi ${user.name}, You user registration has been ${approveUser ? "Approved" : "Rejected"} by the admin.`,
+        subject: approveUser ? MAIL_CONSTANTS.APPROVED_SUBJECT : MAIL_CONSTANTS.REJECTED_SUBJECT,
+        text: MAIL_CONSTANTS.EMAIL_BODY(user, approveUser),
       });
 
       // Set response
       res.locals.responseData = {
         statusCode: 200,
-        message: `User request has been successfully ${
-          approveUser ? "approved" : "rejected"
-        }!`,
+        message: approveUser ? AUTHENTICATION_MESSAGES.USER_APPROVED : AUTHENTICATION_MESSAGES.USER_REJECTED,
       };
     } catch (error) {
       next(error);
@@ -148,7 +146,7 @@ const authenticationController = {
       const response = await authenticationService.removeUser(employeeId);
       res.locals.responseData = {
         statusCode: 200,
-        message: "User have been removed successfully!",
+        message: AUTHENTICATION_MESSAGES.USER_REMOVED,
       };
     } catch (error) {
       next(error);

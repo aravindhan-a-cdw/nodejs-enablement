@@ -7,6 +7,7 @@ const AUTHENTICATION_ERRORS = {
     PENDING_REQUEST_EXISTS: "Your request is pending! Wait for the admin to approve!",
     REQUEST_REJECTED_WAIT_2_DAYS: "Your request is rejected! You need to wait for 2 days before reapplying!",
     USER_ALREADY_EXISTS: "User already exists for the given data",
+    KEY_APPROVE_NOT_FOUND: "Not able to process the data. Key 'approve' not found in body!",
 }
 
 const LOGIN_ERRORS = {

@@ -1,3 +1,7 @@
+/*
+    Author: Aravindhan A
+    This file is the starting file to serve the application.
+*/
 const app = require('./app');
 const db = require('./database');
 const {logger} = require('./config/logger');

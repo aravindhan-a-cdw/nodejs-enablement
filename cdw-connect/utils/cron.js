@@ -1,5 +1,4 @@
 const cron = require("node-cron");
-const moment = require("moment-timezone");
 const { getWalletData } = require("../utils/walletData");
 const User = require("../models/user");
 const { logger } = require("../config/logger");
@@ -26,13 +25,11 @@ const dailyTask = async () => {
 
 // Calculate the time difference between IST and UTC
 const timeZone = "Asia/Kolkata";
-const cronTime = "0 8 * * *"; // 8 AM in IST
+const cronTime = "30 17 13 * * *"; // 8 AM in IST
 
 cron.schedule(
   cronTime,
   () => {
-    const currentIST = moment.tz(timeZone).format();
-    console.log("Current IST time:", currentIST);
     dailyTask();
   },
   {
